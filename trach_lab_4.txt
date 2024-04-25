@@ -1,0 +1,170 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <GL/glut.h>
+#include <cmath>
+
+struct Point {
+    int x;
+    int y;
+};
+
+struct Edge {
+    int y_max;
+    float x_min;
+    float inverse_slope;
+};
+
+class Polygon {
+public:
+    std::vector<Point> vertices;
+
+    void addVertex(Point p) {
+        vertices.push_back(p);
+    }
+};
+
+bool compareByY(const Point &a, const Point &b) {
+    return a.y < b.y;
+}
+
+Point getIntersectionPoint(Point p1, Point p2, int boundary) {
+    float m = static_cast<float>(p2.y - p1.y) / (p2.x - p1.x);
+    float x = p1.x + (boundary - p1.y) / m;
+    return {static_cast<int>(x), boundary};
+}
+
+void scanlinePolygon(Polygon polygon) {
+    std::vector<Edge> edges;
+    int minY = INT32_MAX;
+    int maxY = INT32_MIN;
+
+    for (int i = 0; i < polygon.vertices.size(); i++) {
+        Point current = polygon.vertices[i];
+        Point next = polygon.vertices[(i + 1) % polygon.vertices.size()];
+
+        if (current.y < minY) {
+            minY = current.y;
+        }
+
+        if (current.y > maxY) {
+            maxY = current.y;
+        }
+
+        Edge edge;
+
+        if (current.y < next.y) {
+            edge.y_max = next.y;
+            edge.x_min = current.x;
+            edge.inverse_slope = static_cast<float>(next.x - current.x) / (next.y - current.y);
+        } else {
+            edge.y_max = current.y;
+            edge.x_min = next.x;
+            edge.inverse_slope = static_cast<float>(current.x - next.x) / (current.y - next.y);
+        }
+
+        edges.push_back(edge);
+    }
+
+    for (int y = minY; y <= maxY; y++) {
+        std::vector<float> intersections;
+
+        for (Edge edge : edges) {
+            if (y >= edge.y_max) {
+                continue;
+            }
+
+            float x = edge.x_min + edge.inverse_slope * (y - minY);
+            intersections.push_back(x);
+        }
+
+        std::sort(intersections.begin(), intersections.end());
+
+        for (int i = 0; i < intersections.size(); i += 2) {
+            glBegin(GL_LINES);
+            glVertex2i(static_cast<int>(intersections[i]), y);
+            glVertex2i(static_cast<int>(intersections[i + 1]), y);
+            glEnd();
+        }
+    }
+
+    glFlush();
+}
+
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    Polygon polygon;
+    // polygon.addVertex({50, 50});
+    // polygon.addVertex({300, 50});
+    // polygon.addVertex({150, 300});
+    polygon.addVertex({100, 50});
+   polygon.addVertex({90, 100});
+    polygon.addVertex({150, 50});
+    polygon.addVertex({75, 150});
+   
+
+    scanlinePolygon(polygon);
+
+    glFlush();
+
+/////////////////////////////////////////
+    // int kernel[3][3] = {
+    //     {1, 1, 1},
+    //     {1, 1, 1},
+    //     {1, 1, 1}
+    // };
+
+    // int divisor = 9;
+
+    // glMatrixMode(GL_PROJECTION);
+    // glPushMatrix();
+    // glLoadIdentity();
+    // glOrtho(0, 1, 0, 1, -1, 1);
+    // glMatrixMode(GL_MODELVIEW);
+    // glPushMatrix();
+    // glLoadIdentity();
+
+    // glBegin(GL_POINTS);
+    // for (int y = 0; y < 480; y++) {
+    //     for (int x = 0; x < 640; x++) {
+    //         int r = 0, g = 0, b = 0;
+    //         for (int ky = 0; ky < 3; ky++) {
+    //             for (int kx = 0; kx < 3; kx++) {
+    //                 unsigned char pixel[3];
+    //                 glReadPixels(x + kx - 1, y + ky - 1, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixel);
+    //                 r += pixel[0] * kernel[ky][kx];
+    //                 g += pixel[1] * kernel[ky][kx];
+    //                 b += pixel[2] * kernel[ky][kx];
+    //             }
+    //         }
+    //         //r /= divisor;
+    //         //g /= divisor;
+    //         //b /= divisor;
+    //         //glColor3ub(r, g, b);
+    //         glVertex2f(x / 640.0, y / 480.0);
+    //     }
+    // }
+    // glEnd();
+
+    // glPopMatrix();
+    // glMatrixMode(GL_PROJECTION);
+    // glPopMatrix();
+
+    // glutSwapBuffers();
+
+    ///////////////
+}
+
+int main(int argc, char** argv) {
+    glutInit(&argc, argv);
+    //glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+    glutInitWindowSize(1600, 800);
+    glutCreateWindow("Scanline Polygon Rasterization");
+    //glClearColor(0.0, 0.0, 0.0, 1.0);
+    gluOrtho2D(0, 400, 0, 400);
+    glutDisplayFunc(display);
+    glutMainLoop();
+
+    return 0;
+}
