@@ -19,9 +19,15 @@ def key_callback(window, key, scancode, action, mods):
         fill(miny + 1, maxy - 1)
     if key == glfw.KEY_2 and action == glfw.PRESS:
         filtration()
-
+    if key == glfw.KEY_0 and action == glfw.PRESS:
+        data = [[255] * sizeX for i in range(sizeY)]
+        points = []
+        edges = []
+        cnt = 0
+        print("Clear all points")
     if key == glfw.KEY_ESCAPE and action == glfw.PRESS:
         glfw.set_window_should_close(window, True)
+
 
 def mouse_button_callback(window, button, action, mods):
     global cnt, data, edges, points
@@ -53,8 +59,7 @@ def drawLine(x0, y0, x1, y1):
     if x0 == x1:
         m = 2 ** 32
     else:
-        m = ((y1 - y0) /
-             (x1 - x0))
+        m = ((y1 - y0) / (x1 - x0))
     e = -.5
     x = x0
     y = y0
@@ -160,7 +165,9 @@ def fill(start, end):
             x1, y1 = points[edge[0]]
             x2, y2 = points[edge[1]]
             if (y1 >= y and y2 <= y) or (y1 <= y and y2 >= y):
-                dx = (x2 - x1) / (y2 - y1)
+                dx = 1
+                if (y2 - y1 != 0):
+                    dx = (x2 - x1) / (y2 - y1)
                 x = int(ceil(((y - y1) * dx) + x1))
                 active_edge.append(x)
 

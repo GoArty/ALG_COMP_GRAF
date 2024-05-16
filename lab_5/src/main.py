@@ -24,7 +24,6 @@ def key_callback(window, key, scancode, action, mods):
         fill(miny + 1, maxy - 1)
     if key == glfw.KEY_2 and action == glfw.PRESS:
         filtration()
-
     if key == glfw.KEY_ESCAPE and action == glfw.PRESS:
         glfw.set_window_should_close(window, True)
     if key == glfw.KEY_3 and action == glfw.PRESS:
@@ -39,6 +38,12 @@ def key_callback(window, key, scancode, action, mods):
             for edge in edges:
                 clip([points[edge[0]][0], points[edge[0]][1], points[edge[1]][0],  points[edge[1]][1]])
         print("Cohen-Sutherland complit")
+    if key == glfw.KEY_0 and action == glfw.PRESS:
+        data = [[255] * sizeX for i in range(sizeY)]
+        points = []
+        edges = []
+        cnt = 0
+        print("Clear all points")
 
 def mouse_button_callback(window, button, action, mods):
     global cnt, data, edges, points
@@ -176,7 +181,9 @@ def fill(start, end):
             x1, y1 = points[edge[0]]
             x2, y2 = points[edge[1]]
             if (y1 >= y and y2 <= y) or (y1 <= y and y2 >= y):
-                dx = (x2 - x1) / (y2 - y1)
+                dx = 1
+                if (y2 - y1 != 0):
+                    dx = (x2 - x1) / (y2 - y1)
                 x = int(ceil(((y - y1) * dx) + x1))
                 active_edge.append(x)
 

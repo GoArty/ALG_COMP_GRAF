@@ -1,20 +1,11 @@
 cmake_minimum_required(VERSION 3.17)
-project(MyProject)
+project(main)
 
 # Найдем библиотеки GLFW и OpenGL
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
-find_package(GLU REQUIRED)
-include_directories(include)  
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall")
+set(SRC_LIST stb_image.h main.cpp)
 
-# Добавим исполняемый файл
-add_executable(main main.cpp stb_image.h)
-
-# Связываем исполняемый файл с библиотеками GLFW и OpenGL
-
-target_link_libraries(main PRIVATE glfw OpenGL::GL ${GLUT_LIBRARY} ${GLU_LIBRARY})
-     
-
-
-
+add_executable(${PROJECT_NAME} ${SRC_LIST})
+target_link_libraries(${PROJECT_NAME} glfw OpenGL)
