@@ -130,7 +130,7 @@ void light()
 void texture()
 {
     int width_1, height_1, channels;
-    unsigned char* image = stbi_load("/home/goarty/Documents/ALG_COMP_GRAF/lab_6/src/texture.bmp", &width_1, &height_1, &channels, 0);
+    unsigned char* image = stbi_load("./../texture.bmp", &width_1, &height_1, &channels, 0);
     
     glEnable(GL_TEXTURE_2D);
     glGenTextures(1, &textureID);
