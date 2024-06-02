@@ -8,9 +8,10 @@
 #include "iostream"
 #include <fstream>
 #include <sstream>
-using std::cos, std::sin, std::string;
+#include <vector>
+using std::cos, std::sin, std::string, std::vector;
 using namespace std::string_literals;
-//5,143874
+//5,143159
 int mode = 1;
 int lightMode = 1;
 int degreeMode = 1;
@@ -32,10 +33,10 @@ int height = 1000;
 
 GLuint textureID;
 
-int vao = 0;
-int vbo = 0;
-int ebo = 0;
-int indices_count = 0;
+GLuint vbo;
+GLfloat quadStripVertices[361 * 2 * 3]; 
+GLfloat polygonVertices[361 * 3]; 
+GLuint quadStripVBO, polygonVBO;
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
@@ -165,6 +166,52 @@ void move_object()
         V = -V;
 }
 
+void render()
+{
+    // Рисование с использованием буферов вершин
+    glBindBuffer(GL_ARRAY_BUFFER, quadStripVBO);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, NULL);
+    glDrawArrays(GL_QUAD_STRIP, 0, 361 * 2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, polygonVBO);
+    glVertexPointer(3, GL_FLOAT, 0, NULL);
+    glDrawArrays(GL_POLYGON, 0, 361);
+}
+
+
+void fillVertices() {
+    for (int i = 0; i <= 360; i++)
+    {
+        float angle = i * M_PI / 180;
+        // Для GL_QUAD_STRIP
+        quadStripVertices[i * 6] = 1 * cos(angle) + osnov_x;
+        quadStripVertices[i * 6 + 1] = 0.5 * sin(angle) + osnov_y;
+        quadStripVertices[i * 6 + 2] = 0.0;
+        quadStripVertices[i * 6 + 3] = 1 * cos(angle);
+        quadStripVertices[i * 6 + 4] = 0.5 * sin(angle);
+        quadStripVertices[i * 6 + 5] = 1.0;
+
+        // Для первого GL_POLYGON
+        polygonVertices[i * 3] = 1 * cos(angle) + osnov_x;
+        polygonVertices[i * 3 + 1] = 0.5 * sin(angle) + osnov_y;
+        polygonVertices[i * 3 + 2] = 0.0;
+    }
+}
+
+
+void initVBO() {
+    fillVertices();
+
+    glGenBuffers(1, &quadStripVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadStripVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadStripVertices), quadStripVertices, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &polygonVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, polygonVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(polygonVertices), polygonVertices, GL_STATIC_DRAW);
+}
+
 void display(GLFWwindow* window)
 {
     glClearColor (0.3, 0.3, 0.3, 0.0);
@@ -178,40 +225,7 @@ void display(GLFWwindow* window)
     glRotatef(degree_y * 50.f, 1.f, 0.f, 0.f);
     glRotatef(degree_x * 50.f, 0.f, 1.f, 0.f);
 
-    glBegin(GL_QUAD_STRIP);
-    glColor3f(0.4f, 0.4f, 1.0f);
-    for (int i = 0; i <= 360; i += 1)
-    {
-        float angle = i * M_PI / 180 ;
-        glTexCoord2f(1 * cos(angle) + osnov_x, 0.5 * sin(angle) + osnov_y);
-        glVertex3f(1 * cos(angle) + osnov_x, 0.5 * sin(angle) + osnov_y, 0.0);
-        glTexCoord2f(1 * cos(angle), 0.5 * sin(angle));
-        glVertex3f(1 * cos(angle), 0.5 * sin(angle), 1);
-    }
-    glEnd();
-
-    glBegin(GL_POLYGON);
-    glNormal3f(1, 1, -1);
-    glColor3f(1.0f, 0.3f, 0.3f);
-    for (int i = 0; i <= 360; i++)
-    {
-        float angle = i * M_PI / 180;
-        glTexCoord2f(1 * cos(angle) + osnov_x, 0.5 * sin(angle) + osnov_y);
-        glVertex3f(1 * cos(angle) + osnov_x, 0.5 * sin(angle) + osnov_y, 0.0);
-    }
-    glEnd();
-
-    glBegin(GL_POLYGON);
-    glNormal3f(1, 1, 1);
-    glColor3f(0.5f, 0.7f, 0.7f);
-    for (int i = 0; i <= 360; i++)
-    {
-        float angle = i * M_PI / 180;
-        glTexCoord2f(1 * cos(angle), 0.5 * sin(angle));
-        glVertex3f(1 * cos(angle), 0.5 * sin(angle), 1);
-    }
-    
-    glEnd();
+    render();
 
     glPopMatrix();
     GLfloat spec[] = {1, 1, 1, 1};
@@ -246,7 +260,6 @@ GLuint compileShader(GLuint type, const std::string& source)
 
     return id;
 }
-
 
 int main()
 {
@@ -337,10 +350,12 @@ int main()
     glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     glEnable(GL_NORMALIZE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    initVBO();
     texture();
 
-
     glUseProgram(program);
+
     for(int i = 0;  i < 300 && !glfwWindowShouldClose(window); i++)
     {
         display(window);
@@ -359,9 +374,12 @@ int main()
         }
 
         glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
 
+        glfwPollEvents();
+
+    }
+    glDeleteBuffers(1, &quadStripVBO);
+    glDeleteBuffers(1, &polygonVBO);
     glfwTerminate();
 
 

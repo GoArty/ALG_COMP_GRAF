@@ -10,7 +10,7 @@
 #include <sstream>
 using std::cos, std::sin, std::string;
 using namespace std::string_literals;
-//5,143874
+//5,144159091
 int mode = 1;
 int lightMode = 1;
 int degreeMode = 1;
@@ -211,7 +211,18 @@ void display(GLFWwindow* window)
     glRotatef(degree_y * 50.f, 1.f, 0.f, 0.f);
     glRotatef(degree_x * 50.f, 0.f, 1.f, 0.f);
 
-    //render();
+    GLuint* query_id = new GLuint[1];
+
+    glGenQueries(1, query_id);
+
+    glBeginQuery(GL_SAMPLES_PASSED, query_id[0]);
+
+
+    render();
+
+    glEndQuery(GL_SAMPLES_PASSED);
+    GLuint* samples_passed = new GLuint[1];
+    glGetQueryObjectuiv(query_id[0], GL_QUERY_RESULT, samples_passed);
 
     glPopMatrix();
     GLfloat spec[] = {1, 1, 1, 1};

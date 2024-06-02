@@ -10,7 +10,7 @@
 #include <sstream>
 using std::cos, std::sin, std::string;
 using namespace std::string_literals;
-//5,143874
+//5,14004
 int mode = 1;
 int lightMode = 1;
 int degreeMode = 1;
@@ -211,7 +211,7 @@ void display(GLFWwindow* window)
     glRotatef(degree_y * 50.f, 1.f, 0.f, 0.f);
     glRotatef(degree_x * 50.f, 0.f, 1.f, 0.f);
 
-    //render();
+    render();
 
     glPopMatrix();
     GLfloat spec[] = {1, 1, 1, 1};
@@ -332,13 +332,21 @@ int main()
     glAttachShader(program, fragment);
     glLinkProgram(program);
 
-    glScalef(0.25,0.25, 0.25);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+
     glEnable(GL_LIGHTING);
     glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     glEnable(GL_NORMALIZE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     texture();
 
+    render();
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glScalef(0.25,0.25, 0.25);
     glUseProgram(program);
 
     for(int i = 0;  i < 300 && !glfwWindowShouldClose(window); i++)
