@@ -1,10 +1,16 @@
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <cmath>
+#include <chrono>
+#include <ctime>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "iostream"
-using std::cos, std::sin;
-
+#include <fstream>
+#include <sstream>
+using std::cos, std::sin, std::string;
+using namespace std::string_literals;
+//5,142373
 int mode = 1;
 int lightMode = 1;
 int degreeMode = 1;
@@ -24,7 +30,32 @@ float acl = pow(10,-4);
 int width = 1000;
 int height = 1000;
 
+GLuint prism_display_list = 0;
 GLuint textureID;
+
+void drow_figur();
+
+void update_display_list()
+{
+    if (prism_display_list != 0)
+    {
+        std::cout << 3;
+        glDeleteLists(prism_display_list, 1);
+    }
+    std::cout << 4 << std::endl;
+    drow_figur();
+}
+
+void render_display_list()
+{
+    if(prism_display_list == 0)
+    {
+        std::cout << 1;
+        drow_figur();
+    }
+    std::cout << 2 << std::endl;
+    glCallList(prism_display_list);
+}
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
@@ -37,18 +68,22 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         else if (key == GLFW_KEY_UP)
         {
             degree_y += 0.2;
+            update_display_list();
         }
         else if (key == GLFW_KEY_DOWN)
         {
             degree_y -= 0.2;
+            update_display_list();
         }
         else if (key == GLFW_KEY_LEFT)
         {
             degree_x += 0.2;
+            update_display_list();
         }
         else if (key == GLFW_KEY_RIGHT)
         {
             degree_x -= 0.2;
+            update_display_list();
         }
         else if (key == GLFW_KEY_D)
         {
@@ -69,18 +104,22 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         else if (key == GLFW_KEY_L)
         {
             osnov_x += 0.1;
+            update_display_list();
         }
         else if (key == GLFW_KEY_K)
         {
             osnov_x -= 0.1;
+            update_display_list();
         }
         else if (key == GLFW_KEY_I)
         {
             osnov_y += 0.1;
+            update_display_list();
         }
         else if (key == GLFW_KEY_O)
         {
             osnov_y -= 0.1;
+            update_display_list();
         }
         else if (key == GLFW_KEY_SPACE) 
         {
@@ -89,6 +128,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             else 
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            update_display_list();
             
         }
         else if (key == GLFW_KEY_1)
@@ -154,22 +194,14 @@ void move_object()
         V = -V;
 }
 
-void display(GLFWwindow* window)
+void drow_figur()
 {
-    glClearColor (0.3, 0.3, 0.3, 0.0);
-    glEnable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glPushMatrix();
-
-    glTranslatef(0.0f + move_x, 0.0f + move_y + flying_speed, 0.0f);
-    glRotatef(degree_y * 50.f, 1.f, 0.f, 0.f);
-    glRotatef(degree_x * 50.f, 0.f, 1.f, 0.f);
+    prism_display_list = glGenLists(1);
+    glNewList(prism_display_list, GL_COMPILE);
 
     glBegin(GL_QUAD_STRIP);
     glColor3f(0.4f, 0.4f, 1.0f);
-    for (int i = 0; i <= 360; i += 10)
+    for (int i = 0; i <= 360; i += 1)
     {
         float angle = i * M_PI / 180 ;
         glTexCoord2f(1 * cos(angle) + osnov_x, 0.5 * sin(angle) + osnov_y);
@@ -201,6 +233,23 @@ void display(GLFWwindow* window)
     }
     
     glEnd();
+    glEndList();
+}
+
+void display(GLFWwindow* window)
+{
+    glClearColor (0.3, 0.3, 0.3, 0.0);
+    glEnable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glPushMatrix();
+
+    glTranslatef(0.0f + move_x, 0.0f + move_y + flying_speed, 0.0f);
+    glRotatef(degree_y * 50.f, 1.f, 0.f, 0.f);
+    glRotatef(degree_x * 50.f, 0.f, 1.f, 0.f);
+
+    render_display_list();
 
     glPopMatrix();
     GLfloat spec[] = {1, 1, 1, 1};
@@ -212,12 +261,40 @@ void display(GLFWwindow* window)
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  emiss);
 }
 
+GLuint compileShader(GLuint type, const std::string& source)
+{
+    GLuint id = glCreateShader(type);
+    const char* src = source.c_str();
+    glShaderSource(id, 1, &src, nullptr);
+    glCompileShader(id);
+
+    int result;
+    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
+    if (result == GL_FALSE)
+    {
+        int length;
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+        char* message = (char*)alloca(length * sizeof(char));
+        glGetShaderInfoLog(id, length, &length, message);
+        std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << " shader!" << std::endl;
+        std::cout << message << std::endl;
+        glDeleteShader(id);
+        return 0;
+    }
+
+    return id;
+}
+
+
 int main()
 {
+    auto start = std::chrono::high_resolution_clock::now();
+    
     if (!glfwInit()) {
         return -1;
     }
-    GLFWwindow* window = glfwCreateWindow(width, height, "Lab 6", NULL, NULL);
+
+    GLFWwindow* window = glfwCreateWindow(width, height, "Lab 7_2", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
@@ -226,13 +303,83 @@ int main()
 
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
+
+    GLenum err = glewInit();
+    if (err != GLEW_OK) {
+        std::cerr << "Failed to initialize GLEW: " << glewGetErrorString(err) << std::endl;
+        return -1;
+    }
+   
+    string vertexShaderSource =
+"attribute vec3 aVert; "s+
+"varying vec3 n; "s+
+"varying vec3 v; "s+
+"varying vec2 uv;"s+
+"varying vec4 vertexColor; "s+
+"void main() {"s+
+"    uv = gl_MultiTexCoord0.xy; "s+
+"    v = vec3(gl_ModelViewMatrix * gl_Vertex); "s+
+"    n = normalize(gl_NormalMatrix * gl_Normal); "s+
+"    gl_TexCoord[0] = gl_TextureMatrix[0]  * gl_MultiTexCoord0; "s+
+"    gl_Position = gl_ModelViewProjectionMatrix * vec4(gl_Vertex.x, gl_Vertex.y, gl_Vertex.z, 1); "s+
+"    vec4 vertexColor = vec4(0.5f, 0.0f, 0.0f, 1.0f);"s+
+"}"s;
+
+    string fragmentShaderSource =
+"varying vec3 n; "s+
+"varying vec3 v; "s+
+"varying vec4 vertexColor;"s+
+"uniform sampler2D tex; "s+
+"void main () {  "s+
+"    vec3 L = normalize(gl_LightSource[0].position.xyz - v); "s+
+"    vec3 E = normalize(-v); "s+
+"    vec3 R = normalize(-reflect(L,n)); "s+
+"    vec4 Iamb = gl_FrontLightProduct[0].ambient; "s+
+"    vec4 Idiff = gl_FrontLightProduct[0].diffuse * max(dot(n,L), 1.0); "s+
+"    Idiff = clamp(Idiff, 2.0, 0.6);     "s+
+"    vec4 Ispec = gl_LightSource[0].specular * pow(max(dot(R,E),0.0),0.7);"s+
+"    Ispec = clamp(Ispec, 0.0, 1.0); "s+
+"    vec4 texColor = texture2D(tex, gl_TexCoord[0].st); "s+
+"    gl_FragColor = (Idiff + Iamb + Ispec) * texColor;"s+
+"}"s;
+
+    string fragmentShaderSource_bad =
+"varying vec3 n; "s+
+"varying vec3 v; "s+
+"varying vec4 vertexColor;"s+
+"uniform sampler2D tex; "s+
+"void main () {  "s+
+"    vec3 L = normalize(gl_LightSource[0].position.xyz - v); "s+
+"    vec3 E = normalize(-v); "s+
+"    vec3 R = normalize(-reflect(L,n)); "s+
+"    vec4 Iamb = gl_FrontLightProduct[0].ambient; "s+
+"    vec4 Idiff = gl_FrontLightProduct[0].diffuse * max(dot(n,L), 0.0); "s+
+"    Idiff = clamp(Idiff, 0.0, 1.0);     "s+
+"    vec4 Ispec = gl_LightSource[0].specular * pow(max(dot(R, E), 0.0), gl_FrontMaterial.shininess);"s+
+"    Ispec = clamp(Ispec, 0.0, 1.0); "s+
+"    vec4 texColor = texture2D(tex, gl_TexCoord[0].st); "s+
+"    gl_FragColor = (Idiff + Iamb + Ispec) * texColor;"s+
+"}"s;
+
+    GLuint vertex = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
+    GLuint fragment = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+    //GLuint fragment = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource_bad); 
+
+    int program = glCreateProgram();
+    glAttachShader(program, vertex);
+    glAttachShader(program, fragment);
+    glLinkProgram(program);
+
     glScalef(0.25,0.25, 0.25);
     glEnable(GL_LIGHTING);
     glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     glEnable(GL_NORMALIZE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     texture();
-    while (!glfwWindowShouldClose(window))
+
+
+    glUseProgram(program);
+    for(int i = 0; i < 300 && !glfwWindowShouldClose(window); i++)
     {
         display(window);
 
@@ -254,6 +401,11 @@ int main()
     }
 
     glfwTerminate();
+
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<float> duration = end - start;
+    std::cout << "Время выполнения: " << duration.count() << " секунд" << std::endl;
 
     return 0;
 }

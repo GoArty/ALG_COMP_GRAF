@@ -1,3 +1,0 @@
-/home/goarty/Documents/ALG_COMP_GRAF/lab_6/src/build/CMakeFiles/main.dir
-/home/goarty/Documents/ALG_COMP_GRAF/lab_6/src/build/CMakeFiles/edit_cache.dir
-/home/goarty/Documents/ALG_COMP_GRAF/lab_6/src/build/CMakeFiles/rebuild_cache.dir

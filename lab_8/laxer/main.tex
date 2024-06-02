@@ -147,7 +147,7 @@
 \vspace{11em}
 
 \begin{center}
-\Large {\bf Лабораторная работа № 6} \\ 
+\Large {\bf Лабораторная работа № 8} \\ 
 \large {\bf по курсу <<Алгоритмы компьютерной графики>>}\\
 % \large <<Модельно-видовые и проективные пеобразования>>
 \end{center}\normalsize
@@ -182,161 +182,39 @@
 
 \section{Задача}\label{Sect::task}
 \par
-а. Базовой лабораторной работой является лабораторная работа №3 (модельно-видовые
-преобразования и преобразования проецирования).
+Переписать на шейдерах одну из лабораторных: 2, 3 или 6.
 
-б. Определить параметры модели освещения OpenGL (свойства источника света, свойства
-материалов (поверхностей), характеристики глобальной модели освещения).
-
-в. Исследовать один из методов повышения реалистичности получаемых изображений сцены
-(учет ослабления интенсивности света с расстоянием от источника).
-
-г. Реализовать один из алгоритмов анимации (моделирование движения тела (с заданной начальной скоростью) при условии абсолютно упругого отражения объекта от границ некоторого ограничивающего объема (регулярной формы))
-
-д. Реализовать наложение текстуры (загрузка из файла *.bmp или процедурная генерация) с возможностью отключения использование текстуры для определения свойств поверхности (модулирование коэффициента диффузного отражения)
 \section{Теория}\label{Sect::task}
 \par
 
 \begin{center}
-\Large {Построение реалистических изображений} \\ 
+\Large {Шейдеры} \\ 
 \end{center}\normalsize
 
-• восприятие света включает как физические, так и психологические процессы, что необходимо учитывать при построении реалистических изображений;
+• шейдер – программа, написанная на языке OpenGL Shader Language и выполняющаяся на GPU
 
-• примеры влияния восприятия:
+– вершинные шейдеры (vertex shader) – определение положения, цвета, текстурных координат;
 
-– эффект полос Маха (Mach bands);
+– геометрические шейдеры (geometry shader) – обработка примитивов;
 
-– одновременный контраст;
+– фрагментные/пиксельные шейдеры (fragment/pixel shader) – управление растеризацией;
 
-• при моделировании освещения используют упрощенные эмпирические модели, отражающие компромисс между реалистичностью и объёмом необходимых вычислений:
+– тесселяционные шейдеры (OpenGL 4+): (tessellation control shaders = hull shaders, tessellation evaluation shaders = domain shaders) – разбиение граней.
 
-– прямолинейное распространение света (light rays);
-
-– точечные источники света;
-
-– простая модель освещения (модель Фонга), BRDF (bidirectional reflectance
-
-distribution function), излучательность (radiosity);
-
-– интерполяционное закрашивание (Гуро, Фонг).
-
-\begin{center}
-\Large {Освещение} \\ 
-\end{center}\normalsize
-
-• световая энергия, падающая на поверхность, может быть:
-
-– поглощена (absorption);
-
-– отражена (reflection);
-
-– пропущена (transmission);
-
-• количество поглощенной, отраженной или пропущенной энергии зависит от длины волны света (соответственно, изменяется распределение энергии и объект выглядит цветным, а цвет объекта определяется поглощаемыми длинами волн);
-
-• если объект поглощает весь падающий свет, то он невидим и называется абсолютно черным телом;
-
-• свойства отраженного света зависят:
-
-– от строения, направления и формы источника света;
-
-– от ориентации и свойств поверхности (диффузное и зеркальное отражение).
-
-\begin{center}
-\Large {Диффузное отражение (diffuse scattering): закон косинусов Ламберта} \\ 
-\end{center}\normalsize
-
-
-• диффузное отражение света происходит, когда свет как бы проникает под поверхность объекта, поглощается, а затем вновь испускается;
-
-• диффузно отраженный свет рассеивается равномерно по всем направлениям, следовательно, положение наблюдателя не имеет значения;
-
-• свет точечного источника отражается от идеального рассеивателя по закону косинусов Ламберта (Lambert): интенсивность отраженного света пропорциональна косинусу угла между направлением света и нормалью к поверхности:
-
-• где I — интенсивность отраженного света,
-
-• $I_l$ — интенсивность точечного источника,
-
-• $k_d$ — коэффициент диффузного отражения (0 <= $k_d$ <= 1),
-
-• $0$ — угол между направлением света и нормалью к поверхности
-
-• цвет определяется свойствами материала;
-
-• коэффициент диффузного отражения $k_d$ зависит от материала и длины волны света, но в простых моделях освещения обычно считается постоянным.
-
-\begin{center}
-\Large {Абсолютно упругие соударения} \\ 
-\end{center}\normalsize
-    
-• при абсолютно упругих соударениях:
-
-– не происходит деформации объектов при соударении;
-
-– применимы законы сохранения импульса и энергии;
-
-• центральное соударение шаров:
-
-– законы сохранения импульса и массы:
-
-$v_{1i} · m_1 + v_{2i} · m_2 = v_1f · m_1 + v_{2f} · m_2$
-
-$m_1 · v_{1i}^2 + m_2 · v_{2i}^2 = m_1 · v_{1f}^2 + m_2 · v_{2f}^2$
-
-– решение:
-
-$v_{1f} = (2 · m_2 · v_{2i} + (m_1 - m_2) · v_{1i}) / (m_1 + m_2)$
-
-$v_{2f} = (2 · m_2 · v_{1i} + (m_2 - m_1) · v_{2i}) / (m_1 + m_2)$
-
-• соударение шара с наклонной плоскостью:
-
-$y + k·x + b = 0$
-
-$(x - xc)^2 + (y - yc)^2 = R^2$
-
-+ 2 параметрических уравнения перемещения центра
-
-+ $D = 0$ (касание)
-
-• соударение шара с горизонтальной / вертикальной плоскостью:
-
-– угол падения равен углу отражения;
-
-– модуль скорости после соударения не изменяется.
-
-\begin{center}
-\Large {Текстуры} \\ 
-\end{center}\normalsize
-
-• наложение текстуры выполняется с помощью функции отображения текстурного и объектного координатных пространств:
-
-– задается текстурная функция (texture map) texture(s,t) в так называемом текстурном пространстве (texture space), которая генерирует значения цвета или яркости для каждого значения s,t е[0,1];
-
-– производится отображение на требуемую поверхность, заданную в объектном пространстве (s,t)->(x,y,z);
-
-– производится стандартное преобразование для вывода на экран;
-
-• на практике может решаться обратная задача: 
-
-- определение текстурных координат, соответствующих заданному значению экранных;
-
-• значения текстурной функции могут использоваться:
-
-– для задания интенсивности грани;
-
-– для определения коэффициентов отражения.
 \pagebreak
 \section{Код решения}
-\begin{minted}{C++}
-    Файл main.py
+\begin{minted}{c++}
+    Файл main.cpp
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <cmath>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "iostream"
-using std::cos, std::sin;
+#include <fstream>
+#include <sstream>
+using std::cos, std::sin, std::string;
+using namespace std::string_literals;
 int mode = 1;
 int lightMode = 1;
 int degreeMode = 1;
@@ -415,8 +293,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
             if (mode == 0)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             else 
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  
         }
         else if (key == GLFW_KEY_1)
         {
@@ -440,7 +317,7 @@ void light()
     glTranslatef(1, 1, 1);
     GLfloat material_diffuse[] = {0.75, 0.75, 0.75, 0.0};
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material_diffuse);
-    GLfloat light2_diffuse[] = {1, 1, 1};
+    GLfloat light2_diffuse[] = {1, 1, 0};
     GLfloat light2_position[] = {0, 0, 0, 1.0};
     glEnable(GL_LIGHT0);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light2_diffuse);
@@ -463,10 +340,8 @@ void texture()
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     if (image){
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_1, height_1, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-        std::cout << "1 " << std::endl;
     }
-    std::cout << "2 " << std::endl;
-    stbi_image_free(image);
+   stbi_image_free(image);
 }
 void move_object()
 {
@@ -525,33 +400,125 @@ void display(GLFWwindow* window)
     glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, &shin);
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION,  emiss);
 }
+GLuint compileShader(GLuint type, const std::string& source)
+{
+    GLuint id = glCreateShader(type);
+    const char* src = source.c_str();
+    glShaderSource(id, 1, &src, nullptr);
+    glCompileShader(id);
+
+    int result;
+    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
+    if (result == GL_FALSE)
+    {
+        int length;
+        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+        char* message = (char*)alloca(length * sizeof(char));
+        glGetShaderInfoLog(id, length, &length, message);
+        std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << " shader!" << std::endl;
+        std::cout << message << std::endl;
+        glDeleteShader(id);
+        return 0;
+    }
+    return id;
+}
 int main()
 {
-    if (!glfwInit()) 
+    if (!glfwInit()) {
         return -1;
-    GLFWwindow* window = glfwCreateWindow(width, height, "Lab 6", NULL, NULL);
+    }
+    GLFWwindow* window = glfwCreateWindow(width, height, "Lab 8", NULL, NULL);
     if (!window) {
         glfwTerminate();
         return -1;
     }
     glViewport(0, 0, width, height);
+
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
+
+    GLenum err = glewInit();
+    if (err != GLEW_OK) {
+        std::cerr << "Failed to initialize GLEW: " << glewGetErrorString(err) << std::endl;
+        return -1;
+    }
+    string vertexShaderSource =
+"attribute vec3 aVert; "s+
+"varying vec3 n; "s+
+"varying vec3 v; "s+
+"varying vec2 uv;"s+
+"varying vec4 vertexColor; "s+
+"void main() {"s+
+"    uv = gl_MultiTexCoord0.xy; "s+
+"    v = vec3(gl_ModelViewMatrix * gl_Vertex); "s+
+"    n = normalize(gl_NormalMatrix * gl_Normal); "s+
+"    gl_TexCoord[0] = gl_TextureMatrix[0]  * gl_MultiTexCoord0; "s+
+"    gl_Position = gl_ModelViewProjectionMatrix * vec4(gl_Vertex.x, gl_Vertex.y, gl_Vertex.z, 1); "s+
+"    vec4 vertexColor = vec4(0.5f, 0.0f, 0.0f, 1.0f);"s+
+"}"s;
+    string fragmentShaderSource =
+"varying vec3 n; "s+
+"varying vec3 v; "s+
+"varying vec4 vertexColor;"s+
+"uniform sampler2D tex; "s+
+"void main () {  "s+
+"    vec3 L = normalize(gl_LightSource[0].position.xyz - v); "s+
+"    vec3 E = normalize(-v); "s+
+"    vec3 R = normalize(-reflect(L,n)); "s+
+"    vec4 Iamb = gl_FrontLightProduct[0].ambient; "s+
+"    vec4 Idiff = gl_FrontLightProduct[0].diffuse * max(dot(n,L), 1.0); "s+
+"    Idiff = clamp(Idiff, 2.0, 0.6);     "s+
+"    vec4 Ispec = gl_LightSource[0].specular * pow(max(dot(R,E),0.0),0.7);"s+
+"    Ispec = clamp(Ispec, 0.0, 1.0); "s+
+"    vec4 texColor = texture2D(tex, gl_TexCoord[0].st); "s+
+"    gl_FragColor = (Idiff + Iamb + Ispec) * texColor;"s+
+"}"s;
+    string fragmentShaderSource_bad =
+"varying vec3 n; "s+
+"varying vec3 v; "s+
+"varying vec4 vertexColor;"s+
+"uniform sampler2D tex; "s+
+"void main () {  "s+
+"    vec3 L = normalize(gl_LightSource[0].position.xyz - v); "s+
+"    vec3 E = normalize(-v); "s+
+"    vec3 R = normalize(-reflect(L,n)); "s+
+"    vec4 Iamb = gl_FrontLightProduct[0].ambient; "s+
+"    vec4 Idiff = gl_FrontLightProduct[0].diffuse * max(dot(n,L), 0.0); "s+
+"    Idiff = clamp(Idiff, 0.0, 1.0);     "s+
+"    vec4 Ispec = gl_LightSource[0].specular * pow(max(dot(R, E), 0.0), gl_FrontMaterial.shininess);"s+
+"    Ispec = clamp(Ispec, 0.0, 1.0); "s+
+"    vec4 texColor = texture2D(tex, gl_TexCoord[0].st); "s+
+"    gl_FragColor = (Idiff + Iamb + Ispec) * texColor;"s+
+"}"s;
+    GLuint vertex = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
+    GLuint fragment = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
+    //GLuint fragment = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource_bad); 
+    int program = glCreateProgram();
+    glAttachShader(program, vertex);
+    glAttachShader(program, fragment);
+    glLinkProgram(program);
     glScalef(0.25,0.25, 0.25);
     glEnable(GL_LIGHTING);
     glLightModelf(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
     glEnable(GL_NORMALIZE);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     texture();
+    glUseProgram(program);
     while (!glfwWindowShouldClose(window))
     {
         display(window);
         if(degreeMode)
+        {
             degree_x += 0.01;
+        }
         if(timeMode)
+        {
             move_object();
+        }
         if(lightMode)
+        {
             light();
+        }
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -562,21 +529,21 @@ int main()
 
 \section{Заключение}
 
-    В данной работе я изучил возможности языка С++ в работе с библиотекой OpenGL, а именно научился создавать источники света с помощь функций: glLightfv, glLightf, glMaterialfv, glColorMaterial. А также научился накладывать текстуры на обЪект с помощью функций: glGenTextures, glTexParameterf, glTexImage2D, glTexCoord2f, glBindTexture.
+    В данной работе я изучил возможности языка C++ в работе с библиотекой OpenGL, а именно научился применять шейднры с помощь функций: glewInit(), lCreateShader(type), glShaderSource(id, 1, src, nullptr), glCompileShader(id), glGetShaderiv(id, GL COMPILE STATUS, result), glCreateProgram(), glAttachShader(program, vertex), glLinkProgram(program), glUseProgram(program).
 
 \section{Результат запуска}
     
 \begin{figure}[!htb]
 	\centering
 	\includegraphics[width=0.8\textwidth]{picture_1.png}
-\caption{ОбЪект с текстурой и освещением белого цвета}
+\caption{Шейдер с текстурой 1}
 \label{fig:picture_1.png}
 \end{figure}
 
 \begin{figure}[!htb]
 	\centering
 	\includegraphics[width=0.8\textwidth]{picture_2.png}
-\caption{ОбЪект с текстурой и освещением жёлтого цвета}
+\caption{Шейдер с текстурой 2}
 \label{fig:picture_2.png}
 \end{figure}
 

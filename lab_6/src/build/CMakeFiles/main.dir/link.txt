@@ -1,1 +1,0 @@
-/usr/bin/c++  -std=c++17 -Wall CMakeFiles/main.dir/main.cpp.o -o main  /usr/lib/x86_64-linux-gnu/libglfw.so.3.3 -lOpenGL 
